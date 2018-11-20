@@ -1,177 +1,86 @@
 import React, { Component } from "react";
-import SoHeader from "./container/SoHeader";
-import SoInputText from "./part/SoInputText";
-import SoSubWindow from "./container/SoSubWindow";
-import SoTable from "./container/SoTable";
-import SoTableRow from "./container/SoTableRow";
-import SoTableCell from "./container/SoTableCell";
+import Assigner from "./part/Assigner";
+import ComponentHelper from "./base/ComponentHelper";
 
 class App extends Component {
   constructor(props) {
     super(props);
-    const obj = {
+
+    const json = {
       subWindows: {
-        x1: SoSubWindow.newDto(
-          "s-x1-key",
-          "ほげほげ詳細ポップアップ",
-          220,
-          820,
-          50,
-          50,
-          [
-            SoInputText.newDto(
-              "s-x1-key-date",
-              "input",
-              "date",
-              13,
-              "日付",
-              undefined,
-              e => (
-                <SoInputText
-                  key={e.key}
-                  value={e}
-                  ls={{ color: "blue" }}
-                  is={{ color: "red" }}
-                />
-              )
-            ),
-            SoInputText.newDto(
-              "s-x1-key-id",
-              "input",
-              "string",
-              22,
-              "ID",
-              undefined
-            ),
-            SoInputText.newDto(
-              "s-x1-key-num",
-              "input",
-              "number",
-              13,
-              "総数量",
-              undefined
-            ),
-            SoSubWindow.newDto(
-              "s-x1-key-nest1",
-              "ほげほげ詳細ポップアップnest",
-              220,
-              820,
-              50,
-              50,
-              [
-                SoInputText.newDto(
-                  "s-x1-key-nest1-num",
-                  "input",
-                  "number",
-                  13,
-                  "総数量",
-                  undefined
-                )
+        x1: {
+          clz: "SoSubWindow",
+          key: "s-x1-key",
+          style: { height: "220px", width: "820px", top: "50px", left: "50px" },
+          label: "ほげほげ詳細ポップアップ",
+          childs: [
+            {
+              clz: "SoInputText",
+              key: "s-x1-key-date",
+              style: "input",
+              format: "date",
+              length: 13,
+              label: "日付",
+              value: undefined
+            },
+            {
+              clz: "SoSubWindow",
+              key: "s-x1-key-nest1",
+              style: {
+                height: "220px",
+                width: "820px",
+                top: "50px",
+                left: "50px"
+              },
+              label: "ほげほげ詳細ポップアップnest",
+              childs: [
+                {
+                  clz: "SoInputText",
+                  key: "s-x1-key-nest1-num",
+                  style: null,
+                  type: "input",
+                  format: "number",
+                  length: 13,
+                  label: "総数量",
+                  value: undefined
+                }
               ]
-            )
+            }
           ]
-        ),
-        x2: SoSubWindow.newDto(
-          "s-x2-key",
-          "ほげほげ詳細ポップアップ２",
-          220,
-          820,
-          100,
-          100,
-          [
-            SoInputText.newDto(
-              "s-x2-key-date",
-              "input",
-              "date",
-              13,
-              "何か",
-              undefined,
-              e => (
-                <SoInputText
-                  key={e.key}
-                  value={e}
-                  ls={{ color: "blue" }}
-                  is={{ color: "red" }}
-                />
-              )
-            ),
-            SoInputText.newDto(
-              "s-x2-key-id",
-              "input",
-              "string",
-              22,
-              "適当な",
-              undefined
-            ),
-            SoInputText.newDto(
-              "s-x2-key-num",
-              "input",
-              "number",
-              13,
-              "入力項目",
-              undefined
-            )
-          ]
-        )
-      },
-      headers: {
-        x1: SoHeader.newDto("h-x1-key", "ヘッダラベル", 500, 1000, [
-          SoInputText.newDto(
-            "h-x1-key-num",
-            "input",
-            "number",
-            13,
-            "ヘッダ入力項目",
-            16
-          ),
-          SoTable.newDto(
-            "h-x1-key-table",
-            { border: "1px solid", width: "1000px", height: "300px" },
-            SoTableRow.newDto("h-x1-key-table-h-row", undefined, [
-              SoTableCell.newDto(
-                "h-x1-key-table-h-row-c1",
-                "hogehoge21",
-                undefined
-              ),
-              SoTableCell.newDto(
-                "h-x1-key-table-h-row-c2",
-                "hogehoge25",
-                undefined
-              )
-            ]),
-            [
-              SoTableRow.newDto("h-x1-key-table-d-row1", undefined, [
-                SoTableCell.newDto(
-                  "h-x1-key-table-d-row1-c1",
-                  "hogehoge27",
-                  undefined
-                ),
-                SoTableCell.newDto(
-                  "h-x1-key-table-d-row1-c2",
-                  "hogehoge29",
-                  undefined
-                )
-              ]),
-              SoTableRow.newDto("h-x1-key-table-d-row2", undefined, [
-                SoTableCell.newDto(
-                  "h-x1-key-table-d-row2-c1",
-                  "hogehoge32",
-                  undefined
-                ),
-                SoTableCell.newDto(
-                  "h-x1-key-table-d-row2-c2",
-                  "hogehoge34",
-                  undefined
-                )
-              ])
-            ]
-          )
-        ])
+        }
       }
     };
 
+    const obj = this.convert(json, []);
     this.state = this._fix(obj, []);
     this.render = this.render.bind(this);
+    this._ffff = this._ffff.bind(this);
+  }
+
+  convert(json, keyAry) {
+    if (
+      json == null ||
+      typeof json === "string" ||
+      typeof json === "number" ||
+      typeof json === "boolean"
+    ) {
+      // プリミティブの判断はこれでOK
+      return json;
+    }
+    Object.keys(json).forEach(e => {
+      let element = json[e];
+      if (element == null) {
+        return json;
+      }
+      if (element.clz) {
+        let d = ComponentHelper.newDto(element);
+        json[e] = d;
+      }
+      if (!element.part) {
+        return this.convert(element);
+      }
+    });
+    return json;
   }
 
   /**
@@ -180,14 +89,15 @@ class App extends Component {
    */
   _fix(stateObj, keyAry) {
     if (
+      stateObj == null ||
       typeof stateObj === "string" ||
       typeof stateObj === "number" ||
-      typeof stateObj === "boolean" ||
-      typeof stateObj === "undefined"
+      typeof stateObj === "boolean"
     ) {
-      // 各要素にnullは許容されていないのでプリミティブの判断はこれでOK
+      // プリミティブの判断はこれでOK
       return stateObj;
     }
+
     Object.keys(stateObj).forEach(e => {
       let newKeyAry = keyAry.concat(e);
       let element = stateObj[e];
@@ -232,8 +142,6 @@ class App extends Component {
           //   return <SoHeader key={e} value={this.state.header[e]} />;
           // })}
           // <br />
-          // {/* <textarea style={{height: "600px", width: "600px"}} defaultValue={JSON.stringify(this.state, undefined, 2)}>
-          // </textarea> */}
           // <br />
           // <div>
           //   {this.state.subWindows.map(subWindow => {
@@ -241,8 +149,33 @@ class App extends Component {
           //   })}
           // </div>
         }
+        <div>
+          <textarea style={{ width: "600px", height: "600px" }}>
+            {JSON.stringify(this.state)}
+          </textarea>
+          <Assigner value={{ bindF: this._ffff }} />
+        </div>
       </div>
     );
+  }
+
+  _ffff(event) {
+    console.log(document.getElementsByClassName("hogehoge")[0].value);
+    const json = JSON.parse(
+      document.getElementsByClassName("hogehoge")[0].value
+    );
+    console.log(json);
+    const obj = this.convert(json, []);
+    this.setState(prevState => {
+      const aaa = this._fix(obj, []);
+      let newState = Object.assign({}, prevState);
+      newState.subWindows.x5 = aaa.subWindows.x5;
+      // TODO 何かの方法を考える
+      // Object.keys(aaa).forEach(a => {
+      //   newState[a] = aaa[a];
+      // });
+      return newState;
+    });
   }
 }
 

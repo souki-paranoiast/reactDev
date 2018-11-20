@@ -1,26 +1,23 @@
-import React, { Component } from "react";
+import React from "react";
+import SoComponent from "../base/SoComponent";
 
-class SoTableRow extends Component {
-  static newDto(key, style, cells, f) {
-    let dto = {
-      key: key,
-      style: style,
-      part: false,
-      cells: cells
-    };
-    if (f == null) {
-      dto._f = e => {
-        return () => <SoTableRow key={key} value={e} />;
-      };
-    } else {
-      dto._f = f;
-    }
+class SoTableRow extends SoComponent {
+  static newDto(obj) {
+    let dto = SoComponent.baseDto(obj.key, false, e => (
+      <SoTableRow key={e.key} value={e} />
+    ));
+    dto.style = obj.style;
+    dto.cells = obj.cells;
     return dto;
+  }
+
+  defaultStyle() {
+    return {};
   }
 
   render() {
     return (
-      <tr style={this.props.value.style}>
+      <tr style={this.patchStyle(this.props.value.style, this.defaultStyle)}>
         {this.props.value.cells.map(e => e.newReactComponent())}
       </tr>
     );

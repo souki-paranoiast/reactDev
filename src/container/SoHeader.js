@@ -1,25 +1,27 @@
-import React, { Component } from "react";
+import React from "react";
+import SoComponent from "../base/SoComponent";
 
-class SoHeader extends Component {
-  static newDto(key, label, height, width, childs, f) {
-    let dto = {
-      key: key,
-      part: false,
-      label: label,
-      height: height,
-      width: width,
-      childs: childs
-    };
-    if (f == null) {
-      dto._f = e => <SoHeader key={e.key} value={e} />;
-    } else {
-      dto._f = f;
-    }
+class SoHeader extends SoComponent {
+  static newDto(obj) {
+    let dto = SoComponent.baseDto(obj.key, false, e => (
+      <SoHeader key={e.key} value={e} />
+    ));
+    dto.style = obj.style;
+    dto.label = obj.label;
+    dto.childs = obj.childs;
     return dto;
   }
 
+  defaultStyle() {
+    return {};
+  }
+
   render() {
-    return <div>{this.props.value.childs.map(e => e.newReactComponent())}</div>;
+    return (
+      <div style={this.patchStyle(this.props.value.style, this.defaultStyle)}>
+        {this.props.value.childs.map(e => e.newReactComponent())}
+      </div>
+    );
   }
 }
 

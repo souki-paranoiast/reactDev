@@ -1,21 +1,17 @@
-import React, { Component } from "react";
+import React from "react";
+import SoComponent from "../base/SoComponent";
 
-class SoInputText extends Component {
-  static newDto(key, type, format, length, label, value, f) {
-    let dto = {
-      key: key,
-      part: true,
-      type: type,
-      format: format,
-      length: length,
-      label: label,
-      value: value
-    };
-    if (f == null) {
-      dto._f = e => <SoInputText key={e.key} value={e} />;
-    } else {
-      dto._f = f;
-    }
+class SoInputText extends SoComponent {
+  static newDto(obj) {
+    let dto = SoComponent.baseDto(obj.key, true, e => (
+      <SoInputText key={e.key} value={e} />
+    ));
+    dto.style = obj.style;
+    dto.type = obj.type;
+    dto.format = obj.format;
+    dto.label = obj.label;
+    dto.value = obj.value;
+    dto.length = obj.length;
     return dto;
   }
 
@@ -28,11 +24,8 @@ class SoInputText extends Component {
     this.change = this.change.bind(this);
   }
 
-  labelVDOM(v) {
-    if (v.label == null || (v.label.length && v.label.length === 0)) {
-      return null;
-    }
-    return <span style={this.props.ls}>{v.label}</span>; // ls == LabelStyle
+  defaultStyle() {
+    return {};
   }
 
   change(event) {
@@ -41,15 +34,12 @@ class SoInputText extends Component {
 
   render() {
     return (
-      <span>
-        {this.labelVDOM(this.props.value)}
-        <input
-          type="text"
-          onChange={this.change}
-          value={this.state.value}
-          style={this.props.is} // is == InputStyle
-        />
-      </span>
+      <input
+        type="text"
+        onChange={this.change}
+        value={this.state.value}
+        style={this.patchStyle(this.props.value.style, this.defaultStyle)}
+      />
     );
   }
 }

@@ -1,23 +1,21 @@
-import React, { Component } from "react";
+import React from "react";
+import SoComponent from "../base/SoComponent";
 import Util from "../util/util";
 
-class SoSubWindow extends Component {
-  static newDto(key, label, height, width, top, left, childs, f) {
-    let dto = {
-      key: key,
-      part: false,
-      label: label,
-      height: height,
-      width: width,
-      top: top,
-      left: left,
-      childs: childs
-    };
-    if (f == null) {
-      dto._f = e => <SoSubWindow key={e.key} value={e} />;
-    } else {
-      dto._f = f;
-    }
+// 必要であればstyleを全面的に引数から持ってくるけど、、
+
+class SoSubWindow extends SoComponent {
+  static newDto(obj) {
+    let dto = SoComponent.baseDto(obj.key, false, e => (
+      <SoSubWindow key={e.key} value={e} />
+    ));
+    const style = obj.style;
+    dto.label = obj.label;
+    dto.height = Util.purePxInt(style.height);
+    dto.width = Util.purePxInt(style.width);
+    dto.top = Util.purePxInt(style.top);
+    dto.left = Util.purePxInt(style.left);
+    dto.childs = obj.childs;
     return dto;
   }
 

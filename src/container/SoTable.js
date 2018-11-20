@@ -1,32 +1,30 @@
-import React, { Component } from "react";
+import React from "react";
+import SoComponent from "../base/SoComponent";
 
-class SoTable extends Component {
-  static newDto(key, style, header, detailChilds, f) {
-    let dto = {
-      key: key,
-      part: false,
-      style: style,
-      header: header,
-      detailChilds: detailChilds
-    };
-    if (f == null) {
-      dto._f = e => <SoTable key={e.key} value={e} />;
-    } else {
-      dto._f = f;
-    }
+class SoTable extends SoComponent {
+  static newDto(obj) {
+    let dto = SoComponent.baseDto(obj.key, false, e => (
+      <SoTable key={e.key} value={e} />
+    ));
+    dto.style = obj.style;
+    dto.headerRow = obj.headerRow;
+    dto.detailRows = obj.detailRows;
     return dto;
+  }
+
+  defaultStyle() {
+    return {};
   }
 
   render() {
     return (
-      <table style={this.props.value.style}>
-        <thead>{this.props.value.header.newReactComponent()}</thead>
+      <table style={this.patchStyle(this.props.value.style, this.defaultStyle)}>
+        <thead>{this.props.value.headerRow.newReactComponent()}</thead>
         <tbody>
-          {this.props.value.detailChilds.map(e => e.newReactComponent())}
+          {this.props.value.detailRows.map(e => e.newReactComponent())}
         </tbody>
       </table>
     );
-    //      return <div>{this.props.value.childs.map(e => e.newReactComponent())}</div>;
   }
 }
 
