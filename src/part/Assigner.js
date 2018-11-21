@@ -15,8 +15,12 @@ class Assigner extends Component {
     return (
       <div>
         <textarea
-          className="hogehoge"
+          className="assginJson"
           style={{ width: "600px", height: "600px" }}
+        />
+        <textarea
+          className="assignObjectKey"
+          style={{ width: "300px", height: "300px" }}
         />
         <button onClick={this.change}>追記する</button>
       </div>

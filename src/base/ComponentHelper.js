@@ -4,6 +4,7 @@ import SoTable from "../container/SoTable";
 import SoTableRow from "../container/SoTableRow";
 import SoTableCell from "../container/SoTableCell";
 import SoInputText from "../part/SoInputText";
+import SoImage from "../part/SoImage";
 
 // 本来ならこんなオブジェクトは作りたくないが、とりあえず以下の理由などから用意。
 // ・ContaierのComponentを動的に増加させる場合に、JSON形式でAssginしても各コンポーネントのnewDto()を動かせない
@@ -32,6 +33,9 @@ class ComponentHelper {
 
       case "SoInputText":
         return SoInputText.newDto(obj);
+
+      case "SoImage":
+        return SoImage.newDto(obj);
 
       default:
         throw new Error(`Not supported class parameter. ${obj.clz}`);

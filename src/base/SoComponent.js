@@ -10,7 +10,7 @@ class SoComponent extends Component {
   static baseDto(key, isPart, fn) {
     return {
       key: key,
-      part: isPart,
+      _part: isPart,
       _f: fn
     };
   }

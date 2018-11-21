@@ -1,11 +1,14 @@
 import React, { Component } from "react";
 import Assigner from "./part/Assigner";
 import ComponentHelper from "./base/ComponentHelper";
+import Util from "./util/util";
 
 class App extends Component {
   constructor(props) {
     super(props);
 
+    // styleとかの情報はこいつ自身がstateに持たなくても良いかも？ 多分ここまでネストさせてると、どうせ再描画の命令は各コンポーネント自身で動かさないと発火しないはずだし。。。
+    // 動作が遅くなって、改善の余地があるならテストしてみること
     const json = {
       subWindows: {
         x1: {
@@ -15,34 +18,28 @@ class App extends Component {
           label: "ほげほげ詳細ポップアップ",
           childs: [
             {
-              clz: "SoInputText",
-              key: "s-x1-key-date",
-              style: "input",
-              format: "date",
-              length: 13,
-              label: "日付",
-              value: undefined
+              clz: "SoImage",
+              key: "s-x1-key-img1",
+              style: { width: "200px", height: "200px" },
+              src: "images/yaruki_moeru_businessman.png",
+              alt: "やる気↑",
+              evList: [
+                {
+                  type: "exec",
+                  api: "json.html"
+                }
+              ]
             },
             {
-              clz: "SoSubWindow",
-              key: "s-x1-key-nest1",
-              style: {
-                height: "220px",
-                width: "820px",
-                top: "50px",
-                left: "50px"
-              },
-              label: "ほげほげ詳細ポップアップnest",
-              childs: [
+              clz: "SoImage",
+              key: "s-x1-key-img2",
+              style: { width: "200px", height: "200px" },
+              src: "images/yaruki_moetsuki_businessman.png",
+              alt: "やる気↓",
+              evList: [
                 {
-                  clz: "SoInputText",
-                  key: "s-x1-key-nest1-num",
-                  style: null,
-                  type: "input",
-                  format: "number",
-                  length: 13,
-                  label: "総数量",
-                  value: undefined
+                  type: "exec",
+                  api: "https://api.chatwork.com/v2/rooms/75778963/messages"
                 }
               ]
             }
@@ -51,81 +48,86 @@ class App extends Component {
       }
     };
 
-    const obj = this.convert(json, []);
-    this.state = this._fix(obj, []);
+    let obj = this._pureJsonToDto(json);
+    this._fix(obj);
+    this.state = obj;
     this.render = this.render.bind(this);
     this._ffff = this._ffff.bind(this);
   }
 
-  convert(json, keyAry) {
-    if (
-      json == null ||
-      typeof json === "string" ||
-      typeof json === "number" ||
-      typeof json === "boolean"
-    ) {
-      // プリミティブの判断はこれでOK
-      return json;
+  /**
+   * 破壊的変更。プレーンJSON（関数が存在しないとかそういう）で表現できるオブジェクトの引数を、内部で使用するインスタンスのプロパティにゴリゴリ変更する。
+   * @param {object} obj
+   */
+  _convert(obj) {
+    if (Util.isPrimitive(obj)) {
+      return;
     }
-    Object.keys(json).forEach(e => {
-      let element = json[e];
-      if (element == null) {
-        return json;
+    Object.keys(obj).forEach(e => {
+      let element = obj[e];
+      if (!!element && element.clz) {
+        obj[e] = ComponentHelper.newDto(element);
       }
-      if (element.clz) {
-        let d = ComponentHelper.newDto(element);
-        json[e] = d;
-      }
-      if (!element.part) {
-        return this.convert(element);
+      if (!!element && !element._part) {
+        this._convert(element);
       }
     });
-    return json;
   }
 
   /**
-   * @param {object} stateObj
-   * @param {Array} keyAry
+   * 非破壊的変更（のはず）。プレーンJSON（関数が存在しないとかそういう）で表現できるオブジェクトの引数を、内部で使用するインスタンスのプロパティ変換する
+   * @param {object} obj
    */
-  _fix(stateObj, keyAry) {
-    if (
-      stateObj == null ||
-      typeof stateObj === "string" ||
-      typeof stateObj === "number" ||
-      typeof stateObj === "boolean"
-    ) {
-      // プリミティブの判断はこれでOK
-      return stateObj;
+  _pureJsonToDto(obj) {
+    if (Util.isPrimitive(obj)) {
+      return obj;
     }
+    let o = obj;
+    if (o.clz) {
+      o = ComponentHelper.newDto(o);
+    }
+    if (!o._part) {
+      this._convert(o);
+    }
+    return o;
+  }
 
-    Object.keys(stateObj).forEach(e => {
+  /**
+   * 破壊的変更。基本的なデータバインディング関数と描画関数の付与。それ以外にも足りないものを補完するイメージ
+   * @param {object} obj
+   */
+  _fix(obj, keyAry = []) {
+    if (Util.isPrimitive(obj)) {
+      return obj;
+    }
+    if (obj._f) {
+      obj.newReactComponent = () => obj._f(obj);
+    }
+    if (obj.type === "input") {
+      obj.bindF = event => {
+        let v = event.target.value;
+        this.setState((prevState, currentProps) => {
+          let newState = Object.assign({}, prevState);
+          let s = newState;
+          for (const key of keyAry) {
+            s = s[key];
+          }
+          s.value = v;
+          return newState;
+        });
+      };
+    }
+    Object.keys(obj).forEach(e => {
       let newKeyAry = keyAry.concat(e);
-      let element = stateObj[e];
+      let element = obj[e];
       if (element == null) {
         return;
-      }
-      if (element._f) {
-        element.newReactComponent = () => element._f(element);
       }
       if (!element.part) {
         return this._fix(element, newKeyAry);
       }
-      if (element.type === "input") {
-        element.bindF = event => {
-          let v = event.target.value;
-          this.setState((prevState, currentProps) => {
-            let newState = Object.assign({}, prevState);
-            let s = newState;
-            for (const key of newKeyAry) {
-              s = s[key];
-            }
-            s.value = v;
-            return newState;
-          });
-        };
-      }
     });
-    return stateObj;
+    return obj;
   }
 
   render() {
@@ -137,43 +139,35 @@ class App extends Component {
             return o[e].newReactComponent();
           });
         })}
+        {/* ↓はテスト用。実際はAjaxか他Componentから値を突っ込むイメージになる */}
         {
-          // Object.keys(this.state.header).map(e => {
-          //   return <SoHeader key={e} value={this.state.header[e]} />;
-          // })}
-          // <br />
-          // <br />
-          // <div>
-          //   {this.state.subWindows.map(subWindow => {
-          //     return <SoSubWindow key={subWindow.key} value={subWindow} />;
-          //   })}
+          //   <div>
+          //   <textarea style={{ width: "600px", height: "600px" }}>
+          //     {JSON.stringify(this.state)}
+          //   </textarea>
+          //   <Assigner value={{ bindF: this._ffff }} />
           // </div>
         }
-        <div>
-          <textarea style={{ width: "600px", height: "600px" }}>
-            {JSON.stringify(this.state)}
-          </textarea>
-          <Assigner value={{ bindF: this._ffff }} />
-        </div>
       </div>
     );
   }
 
   _ffff(event) {
-    console.log(document.getElementsByClassName("hogehoge")[0].value);
-    const json = JSON.parse(
-      document.getElementsByClassName("hogehoge")[0].value
+    let json = JSON.parse(
+      document.getElementsByClassName("assginJson")[0].value
     );
-    console.log(json);
-    const obj = this.convert(json, []);
+    const keys = document.getElementsByClassName("assignObjectKey")[0].value;
+    let obj = this._pureJsonToDto(json);
+    this._fix(obj);
     this.setState(prevState => {
-      const aaa = this._fix(obj, []);
       let newState = Object.assign({}, prevState);
-      newState.subWindows.x5 = aaa.subWindows.x5;
-      // TODO 何かの方法を考える
-      // Object.keys(aaa).forEach(a => {
-      //   newState[a] = aaa[a];
-      // });
+
+      let nest = newState;
+      let keyAry = keys.split("::");
+      for (let i = 0, ignoreLast = keyAry.length - 1; i < ignoreLast; i++) {
+        nest = nest[keyAry[i]];
+      }
+      nest[keyAry[keyAry.length - 1]] = obj;
       return newState;
     });
   }
