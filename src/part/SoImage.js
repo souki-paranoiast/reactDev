@@ -1,10 +1,11 @@
 import React from "react";
 import SoComponent from "../base/SoComponent";
+import Api from "../util/Api";
 
 class SoImage extends SoComponent {
   static newDto(obj) {
-    let dto = SoComponent.baseDto(obj.key, true, e => (
-      <SoImage key={e.key} value={e} />
+    let dto = SoComponent.baseDto(obj.key, true, (e, args) => (
+      <SoImage key={e.key} value={e} args={args} />
     ));
     dto.style = obj.style;
     dto.src = obj.src;
@@ -23,18 +24,11 @@ class SoImage extends SoComponent {
     for (const e of list) {
       if (e.type === "exec") {
         const obj = { body: "foo!!!" };
-        const method = "GET";
-        const body = Object.keys(obj)
-          .map(key => key + "=" + encodeURIComponent(obj[key]))
-          .join("&");
-        const headers = {
-          Accept: "application/json",
-          "Content-Type": "application/x-www-form-urlencoded; charset=utf-8"
-        };
-        fetch(e.api, { method, headers })
-          .then(res => res.text())
-          .then(console.log)
-          .catch(console.error);
+        Api.get(e.api, obj,
+          (res) => res.text(),
+          (v) => alert(v),
+          (v) => alert(v)
+        );
       }
     }
   }

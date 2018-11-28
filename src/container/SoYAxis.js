@@ -1,10 +1,13 @@
 import React from "react";
 import SoComponent from "../base/SoComponent";
 
-class SoHeader extends SoComponent {
+/**
+ * 縦方向レイアウト
+ */
+class SoYAxis extends SoComponent {
   static newDto(obj) {
     let dto = SoComponent.baseDto(obj.key, false, (e, args) => (
-      <SoHeader key={e.key} value={e} args={args} />
+      <SoYAxis key={e.key} value={e} args={args} />
     ));
     dto.style = obj.style;
     dto.label = obj.label;
@@ -25,4 +28,4 @@ class SoHeader extends SoComponent {
   }
 }
 
-export default SoHeader;
+export default SoYAxis;

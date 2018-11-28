@@ -1,10 +1,11 @@
 import React from "react";
 import SoComponent from "../base/SoComponent";
+import Util from "../util/Util";
 
 class SoInputText extends SoComponent {
   static newDto(obj) {
-    let dto = SoComponent.baseDto(obj.key, true, e => (
-      <SoInputText key={e.key} value={e} />
+    let dto = SoComponent.baseDto(obj.key, true, (e, args) => (
+      <SoInputText key={e.key} value={e} args={args} />
     ));
     dto.style = obj.style;
     dto.type = obj.type;
@@ -25,11 +26,27 @@ class SoInputText extends SoComponent {
   }
 
   defaultStyle() {
-    return {};
+    return {
+      fontSize: "1rem"
+    };
   }
 
   change(event) {
     this.bindF(event);
+  }
+
+  applyStyleArgs(style) {
+    const ary = this.props.args;
+    if (ary == null || ary.length === 0) {
+      return style;
+    }
+
+    ary
+      .filter(e => e != null && !!e.rem)
+      .forEach(e => {
+        style.fontSize = Util.incrementRem(style.fontSize, e.rem);
+      });
+    return style;
   }
 
   render() {
@@ -38,7 +55,7 @@ class SoInputText extends SoComponent {
         type="text"
         onChange={this.change}
         value={this.state.value}
-        style={this.patchStyle(this.props.value.style, this.defaultStyle)}
+        style={this.applyStyleArgs(this.patchStyle(this.props.value.style, this.defaultStyle))}
       />
     );
   }

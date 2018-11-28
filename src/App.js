@@ -1,11 +1,12 @@
 import React, { Component } from "react";
-import Assigner from "./part/Assigner";
 import ComponentHelper from "./base/ComponentHelper";
-import Util from "./util/util";
+import Util from "./util/Util";
 
 class App extends Component {
   constructor(props) {
     super(props);
+
+    ComponentHelper._template();
 
     // styleとかの情報はこいつ自身がstateに持たなくても良いかも？ 多分ここまでネストさせてると、どうせ再描画の命令は各コンポーネント自身で動かさないと発火しないはずだし。。。
     // 動作が遅くなって、改善の余地があるならテストしてみること
@@ -16,7 +17,17 @@ class App extends Component {
           key: "s-x1-key",
           style: { height: "220px", width: "820px", top: "50px", left: "50px" },
           label: "ほげほげ詳細ポップアップ",
-          childs: [
+          children: [
+            {
+              clz: "SoInputText",
+              key: "s-x1-key-inp",
+              style: null,
+              type: "input",
+              format: null,
+              label: null,
+              value: undefined,
+              length: null
+            },
             {
               clz: "SoImage",
               key: "s-x1-key-img1",
@@ -56,26 +67,7 @@ class App extends Component {
   }
 
   /**
-   * 破壊的変更。プレーンJSON（関数が存在しないとかそういう）で表現できるオブジェクトの引数を、内部で使用するインスタンスのプロパティにゴリゴリ変更する。
-   * @param {object} obj
-   */
-  _convert(obj) {
-    if (Util.isPrimitive(obj)) {
-      return;
-    }
-    Object.keys(obj).forEach(e => {
-      let element = obj[e];
-      if (!!element && element.clz) {
-        obj[e] = ComponentHelper.newDto(element);
-      }
-      if (!!element && !element._part) {
-        this._convert(element);
-      }
-    });
-  }
-
-  /**
-   * 非破壊的変更（のはず）。プレーンJSON（関数が存在しないとかそういう）で表現できるオブジェクトの引数を、内部で使用するインスタンスのプロパティ変換する
+   * 破壊的変更。プレーンJSON（関数が存在しないとかそういう）で表現できるオブジェクトの引数を、内部で使用するインスタンスのプロパティ変換する
    * @param {object} obj
    */
   _pureJsonToDto(obj) {
@@ -87,9 +79,28 @@ class App extends Component {
       o = ComponentHelper.newDto(o);
     }
     if (!o._part) {
-      this._convert(o);
+      this.__convert(o);
     }
     return o;
+  }
+
+    /**
+   * 破壊的変更。プレーンJSON（関数が存在しないとかそういう）で表現できるオブジェクトの引数を、内部で使用するインスタンスのプロパティにゴリゴリ変更する。
+   * @param {object} obj
+   */
+  __convert(obj) {
+    if (Util.isPrimitive(obj)) {
+      return;
+    }
+    Object.keys(obj).forEach(e => {
+      let element = obj[e];
+      if (!!element && element.clz) {
+        obj[e] = ComponentHelper.newDto(element);
+      }
+      if (!!element && !element._part) {
+        this.__convert(element);
+      }
+    });
   }
 
   /**
@@ -101,7 +112,7 @@ class App extends Component {
       return obj;
     }
     if (obj._f) {
-      obj.newReactComponent = () => obj._f(obj);
+      obj.newReactComponent = (args) => obj._f(obj, args);
     }
     if (obj.type === "input") {
       obj.bindF = event => {

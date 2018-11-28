@@ -1,10 +1,13 @@
 import React from "react";
 import SoComponent from "../base/SoComponent";
 
+/**
+ * テーブル行レイアウト
+ */
 class SoTableRow extends SoComponent {
   static newDto(obj) {
-    let dto = SoComponent.baseDto(obj.key, false, e => (
-      <SoTableRow key={e.key} value={e} />
+    let dto = SoComponent.baseDto(obj.key, false, (e, args) => (
+      <SoTableRow key={e.key} value={e} args={args} />
     ));
     dto.style = obj.style;
     dto.cells = obj.cells;
@@ -18,7 +21,7 @@ class SoTableRow extends SoComponent {
   render() {
     return (
       <tr style={this.patchStyle(this.props.value.style, this.defaultStyle)}>
-        {this.props.value.cells.map(e => e.newReactComponent())}
+        {this.props.value.cells.map(e => e.newReactComponent(this.props.args))}
       </tr>
     );
   }

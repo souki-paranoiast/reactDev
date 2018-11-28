@@ -1,21 +1,21 @@
 import React from "react";
 import SoComponent from "../base/SoComponent";
-import Util from "../util/util";
+import Util from "../util/Util";
 
 // 必要であればstyleを全面的に引数から持ってくるけど、、
 
 class SoSubWindow extends SoComponent {
   static newDto(obj) {
-    let dto = SoComponent.baseDto(obj.key, false, e => (
-      <SoSubWindow key={e.key} value={e} />
+    let dto = SoComponent.baseDto(obj.key, false, (e, args) => (
+      <SoSubWindow key={e.key} value={e} args={args} />
     ));
-    const style = obj.style;
+    const style = obj.style || {};
     dto.label = obj.label;
     dto.height = Util.purePxInt(style.height);
     dto.width = Util.purePxInt(style.width);
     dto.top = Util.purePxInt(style.top);
     dto.left = Util.purePxInt(style.left);
-    dto.childs = obj.childs;
+    dto.children = obj.children;
     return dto;
   }
 
@@ -33,24 +33,38 @@ class SoSubWindow extends SoComponent {
       defaultTop: undefined,
       defaultLeft: undefined,
       absoluteLeft: undefined,
-      absoluteTop: undefined
+      absoluteTop: undefined,
+      rem: 0
     };
     this.eventOuterCSS = this.eventOuterCSS.bind(this);
     this.outerCSS = this.outerCSS.bind(this);
     this.innerCSS = this.mainContentCSS.bind(this);
+    this.remIncrementClick = this.remIncrementClick.bind(this);
     this.closeClick = this.closeClick.bind(this);
     this.windowMoveMouseDonw = this.windowMoveMouseDonw.bind(this);
     this.windowMoveMouseMove = this.windowMoveMouseMove.bind(this);
     this.windowMoveMouseUp = this.windowMoveMouseUp.bind(this);
     this.windowMoveMouseLeave = this.windowMoveMouseLeave.bind(this);
-    this.windowResizeMouseDonw = this.windowResizeMouseDonw.bind(this);
-    this.windowResizeMouseMove = this.windowResizeMouseMove.bind(this);
-    this.windowResizeMouseUp = this.windowResizeMouseUp.bind(this);
-    this.windowResizeMouseLeave = this.windowResizeMouseLeave.bind(this);
-    this.handleMouseMove = this.handleMouseMove.bind(this);
-    this.handleMouseUp = this.handleMouseUp.bind(this);
-    this.handleMouseLeave = this.handleMouseLeave.bind(this);
-    // this.observ = this.observ.bind(this);
+    this.observeTarget = React.createRef();
+  }
+
+  componentDidMount() {
+    const observer = new MutationObserver((mutationRecords, thisObserver) => {
+      this.setState((prevState) => {
+        const c = this.observeTarget.current;
+        let s = Object.assign({}, prevState);
+        s.width = Util.purePxInt(c.style.width) + 40;
+        s.height = Util.purePxInt(c.style.height) + 60;
+        return s;
+      });
+    });
+    const target = this.observeTarget.current;
+    // https://qiita.com/MysticDoll/items/7b2654b7a8b58d773286
+    const options = {
+      attriblutes: true,
+      attributeFilter: ["style"]
+    };
+    observer.observe(target, options);
   }
 
   // 意味のあるコンテンツの疑似的な外側（opacityの関係やイベント処理の関係から作成
@@ -90,16 +104,39 @@ class SoSubWindow extends SoComponent {
     };
   }
 
+  titleStyle() {
+    return {
+      color: "#393535",
+      userSelect: "none"
+    };
+  }
+
+  remIncrementStyle() {
+    return {
+      height: "20px", // == outerCSS
+      cursor: "auto",
+      userSelect: "none"
+    };
+  }
+
   closeStyle() {
     return {
       height: "20px", // == outerCSS
       float: "right",
       marginRight: "4px",
-      inlineHeight: "10px",
       fontSize: "22px",
       marginTop: "-6px",
-      cursor: "pointer"
+      cursor: "pointer",
+      userSelect: "none"
     };
+  }
+
+  remIncrementClick() {
+    this.setState((prevState) => {
+      const s = Object.assign({}, prevState);
+      s.rem++;
+      return s;
+    });
   }
 
   closeClick() {
@@ -111,7 +148,7 @@ class SoSubWindow extends SoComponent {
     // 移動バーの中で、LeftTopの絶対値を保持して、そこを移動起点とする
     let al = event.pageX;
     let at = event.pageY;
-    // this.setState(prevState => { // この形にしなくても差分で更新してくれるっぽい
+    // this.setState(prevState => { // この形にしなくても差分で更新してくれるっぽい？ 理解できていない
     //   let s = Object.assign({}, prevState);
     //   s.windowMoving = true;
     //   s.absoluteLeft = Util.purePx(al);
@@ -161,73 +198,6 @@ class SoSubWindow extends SoComponent {
     this.windowMoveMouseMove(event);
   }
 
-  // resize
-  windowResizeMouseDonw(event) {
-    this.setState({
-      windowResizing: true
-    });
-  }
-
-  windowResizeMouseMove(event) {
-    if (!this.state.windowResizing) {
-      return;
-    }
-    // this.setState({
-    //   width: Util.purePx(event.pageX) - this.state.left,
-    //   height: Util.purePx(event.pageY) - this.state.top
-    // });
-    let style = event.currentTarget.style;
-    this.setState({
-      width: Util.purePxInt(style.width) + 40,
-      height: Util.purePxInt(style.height) + 60
-    });
-  }
-
-  windowResizeMouseUp(event) {
-    if (!this.state.windowResizing) {
-      return;
-    }
-    this.setState({
-      windowResizing: false
-    });
-  }
-
-  windowResizeMouseLeave(event) {
-    // this.windowResizeMouseUp(event);
-    this.windowResizeMouseMove(event);
-  }
-
-  // event compose （共通的に拾わないといけないので合成
-  handleMouseMove(event) {
-    this.windowMoveMouseMove(event);
-    this.windowResizeMouseMove(event);
-  }
-  handleMouseUp(event) {
-    this.windowMoveMouseUp(event);
-    this.windowResizeMouseUp(event);
-  }
-  handleMouseLeave(event) {
-    this.windowMoveMouseLeave(event);
-    this.windowResizeMouseLeave(event);
-  }
-
-  // やり方がわるいんだろうけどめちゃくちゃ遅い ※ resizeのイベントを拾うには、こういう監視の方法か、mousemoveしかないらしい。onResizeはwindowとか用らしい..
-  //   observ(element) {
-  //     if (!element) {
-  //       return;
-  //     }
-  //     let observer = new MutationObserver(mutations => {
-  //       mutations.forEach(mutation => {
-  //         this.setState({
-  //           width: mutation.target.width,
-  //           height: mutation.target.height
-  //         });
-  //       });
-  //     });
-  //     observer.observe(element, { attributes: true });
-  //   }
-
-  // ReactではCSSもJSで書くスタイルで良いんじゃないかって考え方があるらしい https://qiita.com/koba04/items/0e81a04262e1158dbbe4
   // 親のopacityは子に全て適用されてしまうらしい。background: rgbaで対応する方法もあるらしいが、少し用途と違ったのでこんな形で。
   // eventOuterCSSを作ったのは、これがあればHTMLのBodyにイベントを設定しなくても拾えるようになるのでは？という意図から
   render() {
@@ -239,28 +209,30 @@ class SoSubWindow extends SoComponent {
         <div
           style={this.eventOuterCSS()}
           onMouseMove={this.windowMoveMouseMove}
-          onMouseUp={this.handleMouseUp}
-          onMouseLeave={this.handleMouseLeave}
+          onMouseUp={this.windowMoveMouseUp}
+          onMouseLeave={this.windowMoveMouseLeave}
         />
         <div
           style={this.outerCSS()}
           onMouseDown={this.windowMoveMouseDonw}
           onMouseMove={this.windowMoveMouseMove}
-          onMouseUp={this.handleMouseUp}
+          onMouseUp={this.windowMoveMouseUp}
         >
-          <span>{this.props.value.label}</span>
+          <span style={this.titleStyle()}>{this.props.value.label}</span>
+          <span style={this.remIncrementStyle()} onClick={this.remIncrementClick}>
+            ＋
+          </span>
           <span style={this.closeStyle()} onClick={this.closeClick}>
             ×
           </span>
         </div>
         <div
-          //   ref={element => this.observ(element)}
           style={this.mainContentCSS()}
-          onMouseDown={this.windowResizeMouseDonw}
-          onMouseMove={this.handleMouseMove}
-          onMouseUp={this.handleMouseUp}
+          ref={this.observeTarget}
+          onMouseMove={this.windowMoveMouseMove}
+          onMouseUp={this.windowMoveMouseUp}
         >
-          {this.props.value.childs.map(e => e.newReactComponent())}
+          {this.props.value.children.map(e => e.newReactComponent(this.pushArgs(this.props.args, { rem: this.state.rem })))}
         </div>
       </div>
     );

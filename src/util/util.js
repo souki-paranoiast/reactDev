@@ -22,6 +22,22 @@ class Util {
     return parseInt(this.purePx(value), 10);
   }
 
+  /**
+   * @param {string} size 
+   * @param {number} multi integer
+   * @returns {string} (size + (0.1 * mutil))rem
+   */
+  static incrementRem(size, multi) {
+    if (size == null) {
+      return null;
+    }
+    if (size.endsWith && size.endsWith("rem")) {
+      const a = (1 * multi) / 10;
+      return (parseFloat(size.substring(0, size.length - 3)) + a) + "rem";
+    }
+    return size; // TODO
+  }
+
   static isEmptyObject(obj) {
     if (obj == null) {
       return true;
@@ -34,6 +50,14 @@ class Util {
     // ただし、NaNもnumber扱いらしいので場合によっては注意が必要。 というかこのロジックだとtypeはstring型確定なのに!=比較だとコンパイル時に注意が出る...
     const type = typeof arg;
     return arg == null || (type !== "object" && type !== "function");
+  }
+
+  _test() {
+    // ES6ならパターンマッチによる変数代入が可能らしい。ただ、配列の場合とオブジェクトの場合で書き方が変わるのは面倒か。。タプル的なものは全社か
+    const aaa = [5,4,3];
+    const [a,b,c] = aaa;
+    const {c1: hoge, c2: fuga} = {c1: 111, c2: "foo"};
+    console.log(a, b, c, hoge, fuga);
   }
 }
 

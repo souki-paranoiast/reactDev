@@ -41,6 +41,39 @@ class ComponentHelper {
         throw new Error(`Not supported class parameter. ${obj.clz}`);
     }
   }
+
+  static _template() {
+    const src = this.newDto.toString();
+    const lines = src.split(/\r|\n|\r\n/);
+    const clzObjList = lines.map(line => line.trim())
+      .filter(line => line.startsWith("case \""))
+      .map(line => line.substring(6, line.length - 2))
+      .map(clz => {
+        const o = this.newDto({ clz });
+        let n = {};
+        n.clz = clz;
+        n = Object.assign(n, o); // 順番入れ替え
+        return n;
+      });
+
+    const s = JSON.stringify(clzObjList, (key, value) => {
+      if (key === "children" || key === "detailRows" || key === "evList" || key === "cells") {
+        return [];
+      }
+      if (key === "style" || key === "child") {
+        return {};
+      }
+      if (key.startsWith("_")) { // functionはそもそも消えてOK。_で始まるのは自分で設定するものじゃないので消す
+        return undefined;
+      }
+      if (value == null) {
+        return "";
+      }
+      return value;
+    });
+    console.log(s);
+  }
 }
+
 
 export default ComponentHelper;
